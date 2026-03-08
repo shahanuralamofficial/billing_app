@@ -19,7 +19,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final MobileScannerController _scannerController = MobileScannerController(
     detectionSpeed: DetectionSpeed.normal,
-    returnImage: false,
+    facing: CameraFacing.back,
+    torchEnabled: false,
+    formats: [BarcodeFormat.all],
   );
 
   bool _isCameraOn = true;
