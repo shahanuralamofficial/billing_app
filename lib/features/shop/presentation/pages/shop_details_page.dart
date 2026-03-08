@@ -127,27 +127,27 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     const InputLabel(text: 'Shop Name'),
                     _buildTextField(
                       controller: _nameController,
-                      hint: 'e.g. QuickMart Superstore',
+                      hint: 'e.g. Shahanur Shop',
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Address Line 1'),
                     _buildTextField(
                       controller: _address1Controller,
-                      hint: 'Samrajpet, Mecheri',
+                      hint: 'Road #4, Sector #1',
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Address Line 2 (Optional)'),
                     _buildTextField(
                       controller: _address2Controller,
-                      hint: 'Salem - 636453',
+                      hint: 'Uttara, Dhaka-1230',
                     ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Phone Number'),
                     _buildTextField(
                       controller: _phoneController,
-                      hint: '+91 7010674588',
+                      hint: '+880 1700-000000',
                       keyboardType: TextInputType.phone,
                       validator: AppValidators.required('Required'),
                     ),
@@ -155,7 +155,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     const InputLabel(text: 'UPI ID'),
                     _buildTextField(
                       controller: _upiController,
-                      hint: 'dineshsowndar@oksbi',
+                      hint: 'shahanur@bkash',
                     ),
                     const SizedBox(height: 15),
                     Row(

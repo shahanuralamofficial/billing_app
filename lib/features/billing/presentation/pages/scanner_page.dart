@@ -15,6 +15,7 @@ class _ScannerPageState extends State<ScannerPage> {
     detectionSpeed: DetectionSpeed.normal,
     facing: CameraFacing.back,
     torchEnabled: false,
+    formats: [BarcodeFormat.all],
   );
   bool _isScanned = false;
 
