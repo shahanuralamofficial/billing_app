@@ -2,12 +2,6 @@
 
 A feature-rich, high-performance offline-first billing and Point of Sale (POS) application built with Flutter. Designed for seamless retail checkout operations featuring barcode scanning, thermal Bluetooth printing, and robust local data persistence.
 
-## Screenshot
-
-
-https://github.com/user-attachments/assets/f2d16454-5408-43b3-b207-cd843bbc2c9e
-
-
 
 ## 🎯 Project Scope
 
@@ -75,7 +69,7 @@ lib/
 
 1. Clone the repository and navigate to the project directory:
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/shahanuralamofficial/billing_app.git
    cd billing_app
    ```
 
