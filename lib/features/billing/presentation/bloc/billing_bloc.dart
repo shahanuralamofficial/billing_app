@@ -1,10 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:uuid/uuid.dart';
 import '../../domain/entities/cart_item.dart';
-import 'package:billing_app/features/product/domain/entities/product.dart';
-import 'package:billing_app/features/product/domain/usecases/product_usecases.dart';
+import 'package:shop_management/features/product/domain/entities/product.dart';
+import 'package:shop_management/features/product/domain/usecases/product_usecases.dart';
 import '../../../../core/utils/printer_helper.dart';
 import '../../../../core/data/hive_database.dart';
+import '../../data/models/sale_model.dart';
+import '../../../product/data/models/product_model.dart';
 
 part 'billing_event.dart';
 part 'billing_state.dart';
@@ -36,7 +39,6 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
   void _onAddProductToCart(
       AddProductToCartEvent event, Emitter<BillingState> emit) {
-    // Clear error when adding
     final cleanState = state.copyWith(error: null);
 
     final existingIndex = cleanState.cartItems
@@ -109,7 +111,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         isPrinting: true, printSuccess: false, clearError: true));
 
     try {
-      final items = state.cartItems
+      final itemsForPrint = state.cartItems
           .map((item) => {
                 'name': item.product.name,
                 'qty': item.quantity,
@@ -123,15 +125,46 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           address1: event.address1,
           address2: event.address2,
           phone: event.phone,
-          items: items,
+          items: itemsForPrint,
           total: state.totalAmount,
           footer: event.footer);
+
+      // --- AUTO STOCK UPDATE & SAVE SALE ---
+      final saleId = const Uuid().v4();
+      final sale = SaleModel(
+        id: saleId,
+        itemModels: state.cartItems.map((i) => CartItemModel.fromEntity(i)).toList(),
+        totalAmount: state.totalAmount,
+        dateTime: DateTime.now(),
+      );
+
+      // Save to Sales History
+      await HiveDatabase.saleBox.put(saleId, sale);
+
+      // Update Stock for each product
+      for (var cartItem in state.cartItems) {
+        final product = cartItem.product;
+        final currentStock = product.stock;
+        final newStock = currentStock - cartItem.quantity;
+        
+        final updatedProduct = ProductModel(
+          id: product.id,
+          name: product.name,
+          barcode: product.barcode,
+          price: product.price,
+          buyingPrice: product.buyingPrice,
+          stock: newStock < 0 ? 0 : newStock,
+          expiryDate: product.expiryDate,
+          damagedStock: product.damagedStock,
+        );
+        
+        await HiveDatabase.productBox.put(product.id, updatedProduct);
+      }
 
       emit(state.copyWith(isPrinting: false, printSuccess: true));
     } catch (e) {
       emit(state.copyWith(
           isPrinting: false, error: 'Print failed: $e', clearError: false));
-      // Reset error instantly avoids sticky error
       emit(state.copyWith(clearError: true));
     }
   }

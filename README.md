@@ -1,4 +1,4 @@
-# 🛒 Mobile POS & Billing App 
+# 🛒 Shop Management 
 
 A feature-rich, high-performance offline-first billing and Point of Sale (POS) application built with Flutter. Designed for seamless retail checkout operations featuring barcode scanning, thermal Bluetooth printing, and robust local data persistence.
 
@@ -69,8 +69,8 @@ lib/
 
 1. Clone the repository and navigate to the project directory:
    ```bash
-   git clone https://github.com/shahanuralamofficial/billing_app.git
-   cd billing_app
+   git clone https://github.com/shahanuralamofficial/shop_management.git
+   cd shop_management
    ```
 
 2. Fetch dependencies:

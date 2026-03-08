@@ -20,6 +20,15 @@ class ProductModel extends Product {
   @override
   @HiveField(4)
   final int stock;
+  @override
+  @HiveField(5)
+  final DateTime? expiryDate;
+  @override
+  @HiveField(6)
+  final int damagedStock;
+  @override
+  @HiveField(7)
+  final double buyingPrice;
 
   const ProductModel({
     required this.id,
@@ -27,12 +36,18 @@ class ProductModel extends Product {
     required this.barcode,
     required this.price,
     required this.stock,
+    this.buyingPrice = 0.0,
+    this.expiryDate,
+    this.damagedStock = 0,
   }) : super(
           id: id,
           name: name,
           barcode: barcode,
           price: price,
+          buyingPrice: buyingPrice,
           stock: stock,
+          expiryDate: expiryDate,
+          damagedStock: damagedStock,
         );
 
   factory ProductModel.fromEntity(Product product) {
@@ -41,7 +56,10 @@ class ProductModel extends Product {
       name: product.name,
       barcode: product.barcode,
       price: product.price,
+      buyingPrice: product.buyingPrice,
       stock: product.stock,
+      expiryDate: product.expiryDate,
+      damagedStock: product.damagedStock,
     );
   }
 
@@ -51,7 +69,10 @@ class ProductModel extends Product {
       name: name,
       barcode: barcode,
       price: price,
+      buyingPrice: buyingPrice,
       stock: stock,
+      expiryDate: expiryDate,
+      damagedStock: damagedStock,
     );
   }
 }

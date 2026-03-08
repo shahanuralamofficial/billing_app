@@ -18,7 +18,7 @@ class ShopRepositoryImpl implements ShopRepository {
       } else {
         // Return default shop if not found
         return const Right(Shop(
-            name: 'Shahanur Shop',
+            name: 'Shop Management',
             addressLine1: '',
             addressLine2: '',
             phoneNumber: '',

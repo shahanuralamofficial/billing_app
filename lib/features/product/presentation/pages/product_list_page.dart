@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -60,7 +61,7 @@ class _ProductListPageState extends State<ProductListPage> {
               size: 28, color: Theme.of(context).primaryColor),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Product Management',
+        title: const Text('Inventory Management',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
       ),
@@ -81,14 +82,12 @@ class _ProductListPageState extends State<ProductListPage> {
                           controller: _searchController,
                           textCapitalization: TextCapitalization.words,
                           decoration: InputDecoration(
-                            hintText: 'Scan or enter barcode',
+                            hintText: 'Search by name or barcode',
                             prefixIcon: Icon(
                               Icons.search,
                               color: Colors.grey[400],
                             ),
                           ),
-                          validator:
-                              AppValidators.required('Please enter a barcode'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -106,9 +105,6 @@ class _ProductListPageState extends State<ProductListPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  const Text('Tap the icon to open camera scanner',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF4C669A))),
                 ],
               );
             }),
@@ -140,9 +136,6 @@ class _ProductListPageState extends State<ProductListPage> {
                 }
 
                 if (state.products.isEmpty) {
-                  if (state.status == ProductStatus.error) {
-                    return Center(child: Text('Error: ${state.message}'));
-                  }
                   return const Center(
                       child: Text('No products found. Add some!'));
                 }
@@ -153,24 +146,25 @@ class _ProductListPageState extends State<ProductListPage> {
                         product.barcode.toLowerCase().contains(_searchQuery))
                     .toList();
 
-                if (filteredProducts.isEmpty) {
-                  return const Center(
-                      child: Text('No products match your search.'));
-                }
-
                 return ListView.separated(
-                  padding: const EdgeInsets.only(
-                      left: 16, right: 16, top: 8, bottom: 100),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                   itemCount: filteredProducts.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final product = filteredProducts[index];
+                    final bool isLowStock = product.stock <= 5;
+                    final bool isExpired = product.expiryDate != null &&
+                        product.expiryDate!.isBefore(DateTime.now());
+
                     return Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: borderColor),
+                        border: Border.all(
+                            color: isExpired
+                                ? Colors.red[100]!
+                                : (isLowStock ? Colors.orange[100]! : borderColor)),
                         boxShadow: const [
                           BoxShadow(
                               color: Colors.black12,
@@ -179,63 +173,85 @@ class _ProductListPageState extends State<ProductListPage> {
                         ],
                       ),
                       padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product.name,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '৳${product.price.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[600]),
-                                ),
-                              ],
-                            ),
-                          ),
                           Row(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.edit_rounded,
-                                      color: AppTheme.primaryColor, size: 20),
-                                  constraints: const BoxConstraints(),
-                                  padding: const EdgeInsets.all(8),
-                                  onPressed: () {
-                                    context.push('/products/edit/${product.id}',
-                                        extra: product);
-                                  },
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product.name,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Barcode: ${product.barcode}',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey[500]),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              Text(
+                                '৳${product.price.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Theme.of(context).primaryColor),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          Row(
+                            children: [
+                              _infoChip(
+                                  label: 'Stock: ${product.stock}',
+                                  icon: Icons.inventory_2_outlined,
+                                  color: isLowStock ? Colors.red : Colors.blue),
                               const SizedBox(width: 8),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.delete_outline_rounded,
-                                      color: Colors.red, size: 20),
-                                  constraints: const BoxConstraints(),
-                                  padding: const EdgeInsets.all(8),
-                                  onPressed: () =>
-                                      _confirmDelete(context, product),
-                                ),
+                              _infoChip(
+                                  label: 'Damage: ${product.damagedStock}',
+                                  icon: Icons.broken_image_outlined,
+                                  color: Colors.orange),
+                            ],
+                          ),
+                          if (product.expiryDate != null) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                _infoChip(
+                                    label:
+                                        'Expiry: ${DateFormat('dd MMM yyyy').format(product.expiryDate!)}',
+                                    icon: Icons.event_busy_outlined,
+                                    color: isExpired ? Colors.red : Colors.green),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                label: const Text('Edit'),
+                                onPressed: () {
+                                  context.push('/products/edit/${product.id}',
+                                      extra: product);
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton.icon(
+                                icon: const Icon(Icons.delete_outline,
+                                    size: 18, color: Colors.red),
+                                label: const Text('Delete',
+                                    style: TextStyle(color: Colors.red)),
+                                onPressed: () =>
+                                    _confirmDelete(context, product),
                               ),
                             ],
                           )
@@ -249,12 +265,35 @@ class _ProductListPageState extends State<ProductListPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/products/add'),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 32),
+        icon: const Icon(Icons.add),
+        label: const Text('Add Product'),
+      ),
+    );
+  }
+
+  Widget _infoChip(
+      {required String label, required IconData icon, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 12, fontWeight: FontWeight.bold, color: color),
+          ),
+        ],
       ),
     );
   }

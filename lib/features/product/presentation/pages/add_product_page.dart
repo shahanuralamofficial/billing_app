@@ -1,9 +1,10 @@
-import 'package:billing_app/core/widgets/input_label.dart';
-import 'package:billing_app/core/widgets/primary_button.dart';
+import 'package:shop_management/core/widgets/input_label.dart';
+import 'package:shop_management/core/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import 'package:intl/intl.dart';
 
 import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
@@ -19,15 +20,41 @@ class AddProductPage extends StatefulWidget {
 
 class _AddProductPageState extends State<AddProductPage> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _barcodeController = TextEditingController();
+  
   String _name = '';
-  String _barcode = '';
   double _price = 0.0;
+  double _buyingPrice = 0.0;
+  int _stock = 0;
+  int _damagedStock = 0;
+  DateTime? _expiryDate;
+
+  @override
+  void dispose() {
+    _barcodeController.dispose();
+    super.dispose();
+  }
 
   void _scanBarcode() async {
-    final result = await context.push<String>('/scanner');
+    // Open the simple picker scanner to just get the code
+    final result = await context.push<String>('/barcode-picker');
     if (result != null && result.isNotEmpty) {
       setState(() {
-        _barcode = result;
+        _barcodeController.text = result;
+      });
+    }
+  }
+
+  Future<void> _selectExpiryDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _expiryDate ?? DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+    );
+    if (picked != null && picked != _expiryDate) {
+      setState(() {
+        _expiryDate = picked;
       });
     }
   }
@@ -36,14 +63,15 @@ class _AddProductPageState extends State<AddProductPage> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
+      final barcode = _barcodeController.text.trim();
       final productState = context.read<ProductBloc>().state;
       final existingProduct =
-          productState.products.where((p) => p.barcode == _barcode).firstOrNull;
+          productState.products.where((p) => p.barcode == barcode).firstOrNull;
 
       if (existingProduct != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Product with barcode "$_barcode" already exists!'),
+            content: Text('Product with barcode "$barcode" already exists!'),
             backgroundColor: Colors.red,
           ),
         );
@@ -53,8 +81,12 @@ class _AddProductPageState extends State<AddProductPage> {
       final product = Product(
         id: const Uuid().v4(),
         name: _name,
-        barcode: _barcode,
+        barcode: barcode,
         price: _price,
+        buyingPrice: _buyingPrice,
+        stock: _stock,
+        expiryDate: _expiryDate,
+        damagedStock: _damagedStock,
       );
 
       context.read<ProductBloc>().add(AddProduct(product));
@@ -79,25 +111,23 @@ class _AddProductPageState extends State<AddProductPage> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const InputLabel(text: 'Barcode'),
+                  const InputLabel(text: 'Barcode (বারকোড)'),
                   Row(
                     children: [
                       Expanded(
                         child: TextFormField(
-                          key: ValueKey(_barcode),
-                          initialValue: _barcode,
+                          controller: _barcodeController,
                           decoration: const InputDecoration(
                             hintText: 'Scan or enter barcode',
                           ),
                           validator:
                               AppValidators.required('Please enter a barcode'),
-                          onSaved: (value) => _barcode = value!,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -116,10 +146,10 @@ class _AddProductPageState extends State<AddProductPage> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  const Text('Tap the icon to open camera scanner',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF4C669A))),
+                  const Text('পণ্য যোগ করতে পাশের স্ক্যান বাটনে ক্লিক করুন',
+                      style: TextStyle(fontSize: 12, color: AppTheme.primaryColor)),
                   const SizedBox(height: 24),
-                  const InputLabel(text: 'Product Name'),
+                  const InputLabel(text: 'Product Name (পণ্যের নাম)'),
                   TextFormField(
                     decoration: const InputDecoration(
                       hintText: 'e.g. Basmati Rice',
@@ -129,20 +159,107 @@ class _AddProductPageState extends State<AddProductPage> {
                     onSaved: (value) => _name = value!,
                   ),
                   const SizedBox(height: 24),
-                  const InputLabel(text: 'Price'),
-                  TextFormField(
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      hintText: '0.00',
-                      prefixText: '৳ ',
-                      prefixStyle: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const InputLabel(text: 'Buying Price (কেনা দাম)'),
+                            TextFormField(
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: const InputDecoration(
+                                hintText: '0.00',
+                                prefixText: '৳ ',
+                              ),
+                              validator: AppValidators.price,
+                              onSaved: (value) => _buyingPrice = double.tryParse(value ?? '0') ?? 0.0,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const InputLabel(text: 'Selling Price (বিক্রয় মূল্য)'),
+                            TextFormField(
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: const InputDecoration(
+                                hintText: '0.00',
+                                prefixText: '৳ ',
+                              ),
+                              validator: AppValidators.price,
+                              onSaved: (value) => _price = double.parse(value!),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const InputLabel(text: 'Current Stock (স্টক)'),
+                            TextFormField(
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                hintText: '0',
+                              ),
+                              onSaved: (value) => _stock = int.tryParse(value ?? '0') ?? 0,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const InputLabel(text: 'Damaged (নষ্ট পণ্য)'),
+                            TextFormField(
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                hintText: '0',
+                              ),
+                              onSaved: (value) => _damagedStock = int.tryParse(value ?? '0') ?? 0,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const InputLabel(text: 'Expiry Date (মেয়াদ শেষ - অপশনাল)'),
+                  InkWell(
+                    onTap: _selectExpiryDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _expiryDate == null
+                                ? 'Select Date'
+                                : DateFormat('dd MMM yyyy').format(_expiryDate!),
+                            style: TextStyle(
+                              color: _expiryDate == null ? Colors.grey : Colors.black,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Icon(Icons.calendar_today, size: 20, color: Theme.of(context).primaryColor),
+                        ],
+                      ),
                     ),
-                    validator: AppValidators.price,
-                    onSaved: (value) => _price = double.parse(value!),
                   ),
                 ],
               ),
@@ -152,7 +269,7 @@ class _AddProductPageState extends State<AddProductPage> {
         bottomNavigationBar: PrimaryButton(
           onPressed: _submit,
           icon: Icons.add_circle,
-          label: 'Add Product',
+          label: 'Save to Inventory',
         ));
   }
 }

@@ -1,50 +1,50 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'shop_model.dart';
+part of 'due_record_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class ShopModelAdapter extends TypeAdapter<ShopModel> {
+class DueRecordModelAdapter extends TypeAdapter<DueRecordModel> {
   @override
-  final int typeId = 1;
+  final int typeId = 4;
 
   @override
-  ShopModel read(BinaryReader reader) {
+  DueRecordModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return ShopModel(
-      name: fields[0] as String,
-      addressLine1: fields[1] as String,
-      addressLine2: fields[2] as String,
-      phoneNumber: fields[3] as String,
-      paymentNumber: fields[4] as String,
-      paymentMethod: fields[6] as String,
-      footerText: fields[5] as String,
+    return DueRecordModel(
+      id: fields[0] as String,
+      customerName: fields[1] as String,
+      phoneNumber: fields[2] as String,
+      amount: fields[3] as double,
+      date: fields[4] as DateTime,
+      note: fields[5] as String?,
+      isPaid: fields[6] as bool,
     );
   }
 
   @override
-  void write(BinaryWriter writer, ShopModel obj) {
+  void write(BinaryWriter writer, DueRecordModel obj) {
     writer
       ..writeByte(7)
       ..writeByte(0)
-      ..write(obj.name)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.addressLine1)
+      ..write(obj.customerName)
       ..writeByte(2)
-      ..write(obj.addressLine2)
-      ..writeByte(3)
       ..write(obj.phoneNumber)
+      ..writeByte(3)
+      ..write(obj.amount)
       ..writeByte(4)
-      ..write(obj.paymentNumber)
-      ..writeByte(6)
-      ..write(obj.paymentMethod)
+      ..write(obj.date)
       ..writeByte(5)
-      ..write(obj.footerText);
+      ..write(obj.note)
+      ..writeByte(6)
+      ..write(obj.isPaid);
   }
 
   @override
@@ -53,7 +53,7 @@ class ShopModelAdapter extends TypeAdapter<ShopModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ShopModelAdapter &&
+      other is DueRecordModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

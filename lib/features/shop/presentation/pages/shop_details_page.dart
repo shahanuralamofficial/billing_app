@@ -1,5 +1,5 @@
-import 'package:billing_app/core/widgets/input_label.dart';
-import 'package:billing_app/core/widgets/primary_button.dart';
+import 'package:shop_management/core/widgets/input_label.dart';
+import 'package:shop_management/core/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -132,7 +132,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     const InputLabel(text: 'Shop Name'),
                     _buildTextField(
                       controller: _nameController,
-                      hint: 'e.g. Shahanur Shop',
+                      hint: 'e.g. Shop Management',
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),

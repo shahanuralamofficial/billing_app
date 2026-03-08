@@ -22,13 +22,16 @@ class ProductModelAdapter extends TypeAdapter<ProductModel> {
       barcode: fields[2] as String,
       price: fields[3] as double,
       stock: fields[4] as int,
+      buyingPrice: fields[7] as double,
+      expiryDate: fields[5] as DateTime?,
+      damagedStock: fields[6] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProductModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +41,13 @@ class ProductModelAdapter extends TypeAdapter<ProductModel> {
       ..writeByte(3)
       ..write(obj.price)
       ..writeByte(4)
-      ..write(obj.stock);
+      ..write(obj.stock)
+      ..writeByte(5)
+      ..write(obj.expiryDate)
+      ..writeByte(6)
+      ..write(obj.damagedStock)
+      ..writeByte(7)
+      ..write(obj.buyingPrice);
   }
 
   @override

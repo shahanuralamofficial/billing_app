@@ -1,6 +1,6 @@
 {
-    "name": "billing_app",
-    "short_name": "billing_app",
+    "name": "Shop Management",
+    "short_name": "Shop Management",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
