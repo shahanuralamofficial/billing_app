@@ -21,8 +21,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   late TextEditingController _address1Controller;
   late TextEditingController _address2Controller;
   late TextEditingController _phoneController;
-  late TextEditingController _upiController;
+  late TextEditingController _paymentNumberController;
   late TextEditingController _footerController;
+  String _selectedPaymentMethod = 'bKash';
 
   @override
   void initState() {
@@ -31,7 +32,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _address1Controller = TextEditingController();
     _address2Controller = TextEditingController();
     _phoneController = TextEditingController();
-    _upiController = TextEditingController();
+    _paymentNumberController = TextEditingController();
     _footerController = TextEditingController();
 
     // Load shop data
@@ -44,8 +45,11 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       _address1Controller.text = shop.addressLine1;
       _address2Controller.text = shop.addressLine2;
       _phoneController.text = shop.phoneNumber;
-      _upiController.text = shop.upiId;
+      _paymentNumberController.text = shop.paymentNumber;
       _footerController.text = shop.footerText;
+      setState(() {
+        _selectedPaymentMethod = shop.paymentMethod.isNotEmpty ? shop.paymentMethod : 'bKash';
+      });
     }
   }
 
@@ -55,7 +59,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _address1Controller.dispose();
     _address2Controller.dispose();
     _phoneController.dispose();
-    _upiController.dispose();
+    _paymentNumberController.dispose();
     _footerController.dispose();
     super.dispose();
   }
@@ -67,7 +71,8 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
         addressLine1: _address1Controller.text,
         addressLine2: _address2Controller.text,
         phoneNumber: _phoneController.text,
-        upiId: _upiController.text,
+        paymentNumber: _paymentNumberController.text,
+        paymentMethod: _selectedPaymentMethod,
         footerText: _footerController.text,
       );
 
@@ -151,13 +156,50 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                       keyboardType: TextInputType.phone,
                       validator: AppValidators.required('Required'),
                     ),
+                    const SizedBox(height: 24),
+                    Text('Payment Details',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          color: AppTheme.primaryColor.withValues(alpha: 0.8),
+                        )),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'UPI ID'),
-                    _buildTextField(
-                      controller: _upiController,
-                      hint: 'shahanur@bkash',
+                    const InputLabel(text: 'Payment Method'),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedPaymentMethod,
+                          isExpanded: true,
+                          items: ['bKash', 'Nagad', 'Rocket']
+                              .map((String value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ))
+                              .toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                _selectedPaymentMethod = newValue;
+                              });
+                            }
+                          },
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 15),
+                    const InputLabel(text: 'Account/Phone Number'),
+                    _buildTextField(
+                      controller: _paymentNumberController,
+                      hint: '017XXXXXXXX',
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

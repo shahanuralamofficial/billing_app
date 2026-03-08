@@ -22,7 +22,8 @@ class ShopRepositoryImpl implements ShopRepository {
             addressLine1: '',
             addressLine2: '',
             phoneNumber: '',
-            upiId: '',
+            paymentNumber: '',
+            paymentMethod: 'bKash',
             footerText: 'Thank you, Visit again!!!'));
       }
     } catch (e) {

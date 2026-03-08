@@ -48,19 +48,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Printed successfully'),
                     backgroundColor: Colors.green));
-                // context.read<BillingBloc>().add(ClearCartEvent());
-                // context.go('/');
               }
             },
             builder: (context, billingState) {
               return BlocBuilder<ShopBloc, ShopState>(
                   builder: (context, shopState) {
-                String upiId = '';
-                String shopName = 'Shop';
+                String paymentNumber = '';
+                String paymentMethod = 'bKash';
 
                 if (shopState is ShopLoaded) {
-                  upiId = shopState.shop.upiId;
-                  shopName = shopState.shop.name;
+                  paymentNumber = shopState.shop.paymentNumber;
+                  paymentMethod = shopState.shop.paymentMethod;
                 }
 
                 return Column(
@@ -134,10 +132,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 24),
-
-                            const SizedBox(
-                                height: 120), // padding for bottom fixed bar
                           ],
                         ),
                       ),
@@ -170,12 +164,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 const SizedBox(
                                   height: 8,
                                 ),
-                                upiId.isNotEmpty
+                                paymentNumber.isNotEmpty
                                     ? Column(
                                         children: [
-                                          const Text(
-                                            'Scan to Pay',
-                                            style: TextStyle(
+                                          Text(
+                                            'Scan to pay with $paymentMethod',
+                                            style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black87,
@@ -187,8 +181,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             width: 180,
                                             height: 180,
                                             child: PrettyQrView.data(
-                                              data:
-                                                  'upi://pay?pa=$upiId&pn=$shopName&am=${billingState.totalAmount.toStringAsFixed(2)}&cu=BDT',
+                                              data: _getQrData(paymentMethod,
+                                                  paymentNumber, billingState.totalAmount),
                                             ),
                                           ),
                                         ],
@@ -253,6 +247,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
             },
           ),
         ));
+  }
+
+  String _getQrData(String method, String number, double amount) {
+    final amtStr = amount.toStringAsFixed(2);
+    switch (method.toLowerCase()) {
+      case 'bkash':
+        return 'bkash://payment?recipient=$number&amount=$amtStr';
+      case 'nagad':
+        return 'nagad://pay?recipient=$number&amount=$amtStr';
+      case 'rocket':
+        return 'rocket://pay?recipient=$number&amount=$amtStr';
+      default:
+        return 'tel:$number';
+    }
   }
 
   Widget _buildHeaderCell(String text, TextAlign align) {
